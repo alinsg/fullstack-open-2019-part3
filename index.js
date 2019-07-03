@@ -2,7 +2,7 @@ const express = require('express')
 const app = express()
 const bodyParser = require('body-parser')
 
-let notes = [
+let persons = [
   {
     name: 'Arto Hellas',
     number: '040-123456',
@@ -34,11 +34,13 @@ app.listen(port, () => {
 
 app.get('/', (req, res) => {
   const infoHref = 'info'
+  const personsHref = 'api/persons'
   res.send(`
     <h1>Phonebook</h1>
     <h3>Useful links:</h3>
     <ul>
       <li><a href=${infoHref}>Info</a></li>
+      <li><a href=${personsHref}>Persons</a></li>
     </ul>
   `)
 })
@@ -46,7 +48,11 @@ app.get('/', (req, res) => {
 app.get('/info', (req, res) => {
   const time = Date()
   res.send(`
-    <p>Phonebook has info for ${notes.length} people</p>
+    <p>Phonebook has info for ${persons.length} people</p>
     <p>${time}</p>
   `)
+})
+
+app.get('/api/persons', (req, res) => {
+  res.json(persons)
 })
