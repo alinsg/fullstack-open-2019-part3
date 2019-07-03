@@ -68,3 +68,32 @@ app.delete('/api/persons/:id', (req, res) => {
   persons = persons.filter(person => person.id !== id)
   res.status(204).end()
 })
+
+const generateId = data => {
+  return Math.floor(Math.random() * Math.floor(10000))
+}
+
+const personAlreadyAdded = personName => {
+  return persons.some(person => person.name === personName)
+}
+
+app.post('/api/persons', (req, res) => {
+  const body = req.body
+  if (!body.name || !body.number) {
+    return res.status(400).json({
+      error: 'The name or the number of the person is missing'
+    })
+  } else if (personAlreadyAdded(body.name)) {
+    return res.status(400).json({
+      error: 'This person already exists in the phonebook'
+    })
+  } else {
+    const person = {
+      name: body.name,
+      number: body.number,
+      id: generateId()
+    }
+    persons = [...persons, person]
+    res.json(person)
+  }
+})
