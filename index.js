@@ -1,6 +1,7 @@
 const express = require('express')
 const app = express()
 const bodyParser = require('body-parser')
+const morgan = require('morgan')
 
 let persons = [
   {
@@ -26,6 +27,24 @@ let persons = [
 ]
 
 app.use(bodyParser.json())
+
+app.use(
+  morgan('tiny', {
+    skip: (req, res) => {
+      return res.statusCode < 400
+    },
+    stream: process.stderr
+  })
+)
+
+app.use(
+  morgan('tiny', {
+    skip: (req, res) => {
+      return res.statusCode >= 400
+    },
+    stream: process.stderr
+  })
+)
 
 const port = 3001
 app.listen(port, () => {
