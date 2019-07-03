@@ -1,7 +1,8 @@
-const express = requre('express')
+const express = require('express')
 const app = express()
+const bodyParser = require('body-parser')
 
-const notes = [
+let notes = [
   {
     name: 'Arto Hellas',
     number: '040-123456',
@@ -23,3 +24,29 @@ const notes = [
     id: 4
   }
 ]
+
+app.use(bodyParser.json())
+
+const port = 3001
+app.listen(port, () => {
+  console.log(`Server running on port ${[port]}`)
+})
+
+app.get('/', (req, res) => {
+  const infoHref = 'info'
+  res.send(`
+    <h1>Phonebook</h1>
+    <h3>Useful links:</h3>
+    <ul>
+      <li><a href=${infoHref}>Info</a></li>
+    </ul>
+  `)
+})
+
+app.get('/info', (req, res) => {
+  const time = Date()
+  res.send(`
+    <p>Phonebook has info for ${notes.length} people</p>
+    <p>${time}</p>
+  `)
+})
