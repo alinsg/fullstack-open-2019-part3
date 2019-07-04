@@ -28,23 +28,11 @@ let persons = [
 
 app.use(bodyParser.json())
 
-app.use(
-  morgan('tiny', {
-    skip: (req, res) => {
-      return res.statusCode < 400
-    },
-    stream: process.stderr
-  })
-)
+morgan.token('body', function(req, res) {
+  return JSON.stringify(req.body)
+})
 
-app.use(
-  morgan('tiny', {
-    skip: (req, res) => {
-      return res.statusCode >= 400
-    },
-    stream: process.stderr
-  })
-)
+app.use(morgan(':method :url :status :response-time ms :body'))
 
 const port = 3001
 app.listen(port, () => {
