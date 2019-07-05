@@ -1,30 +1,10 @@
+require('dotenv').config()
 const express = require('express')
 const app = express()
 const bodyParser = require('body-parser')
 const morgan = require('morgan')
 const cors = require('cors')
-const mongoose = require('mongoose')
-require('dotenv').config()
-
-const url = process.env.MONGODB_URL
-
-//MongoDB setup
-mongoose.connect(url, { useNewUrlParser: true })
-
-const personSchema = new mongoose.Schema({
-  name: String,
-  number: String
-})
-
-const Person = mongoose.model('Person', personSchema)
-
-personSchema.set('toJSON', {
-  transform: (document, returnedObject) => {
-    returnedObject.id = returnedObject._id.toString()
-    delete returnedObject._id
-    delete returnedObject.__v
-  }
-})
+const Person = require('./models/person')
 
 //Morgan setup
 app.use(bodyParser.json())
@@ -66,14 +46,14 @@ app.get('/info', (req, res) => {
 
 app.get('/api/persons', (req, res) => {
   Person.find({}).then(persons => {
-    res.json(persons)
+    res.json(persons.map(person => person.toJSON()))
   })
 })
 
 app.get('/api/persons/:id', (req, res) => {
-  const id = Number.parseInt(req.params.id)
-  const person = persons.find(person => person.id === id)
-  person ? res.json(person) : res.status(404).end()
+  Person.findById(req.params.id).then(person => {
+    res.json(person.toJSON())
+  })
 })
 
 app.delete('/api/persons/:id', (req, res) => {
@@ -82,31 +62,19 @@ app.delete('/api/persons/:id', (req, res) => {
   res.status(204).end()
 })
 
-const generateId = data => {
-  return Math.floor(Math.random() * Math.floor(10000))
-}
-
-const personAlreadyAdded = personName => {
-  return persons.some(person => person.name === personName)
-}
-
 app.post('/api/persons', (req, res) => {
   const body = req.body
   if (!body.name || !body.number) {
     return res.status(400).json({
       error: 'The name or the number of the person is missing'
     })
-  } else if (personAlreadyAdded(body.name)) {
-    return res.status(400).json({
-      error: 'This person already exists in the phonebook'
-    })
   } else {
-    const person = {
+    const person = new Person({
       name: body.name,
-      number: body.number,
-      id: generateId()
-    }
-    persons = [...persons, person]
-    res.json(person)
+      number: body.number
+    })
+    person.save().then(savedPerson => {
+      res.json(savedPerson.toJSON())
+    })
   }
 })
