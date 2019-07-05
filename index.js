@@ -16,6 +16,17 @@ morgan.token('body', function(req, res) {
 })
 
 app.use(morgan(':method :url :status :response-time ms :body'))
+//Error handler middleware setup
+
+const errorHandler = (error, req, res, next) => {
+  console.error(error.message)
+  if (error.name === 'Cast error' && error.kind == 'ObjectId') {
+    return res.status(400).send({ error: 'malformated id' })
+  }
+  next(error)
+}
+
+app.use(errorHandler)
 
 //Express setup
 const port = process.env.PORT || 3001
@@ -50,7 +61,7 @@ app.get('/api/persons', (req, res) => {
   })
 })
 
-app.get('/api/persons/:id', (req, res) => {
+app.get('/api/persons/:id', (req, res, next) => {
   Person.findById(req.params.id)
     .then(person => {
       if (person) {
@@ -60,17 +71,16 @@ app.get('/api/persons/:id', (req, res) => {
       }
     })
     .catch(error => {
-      console.log(error)
-      res.status(400).send({ error: 'malformatted id' })
+      next(error)
     })
 })
 
-app.delete('/api/persons/:id', (req, res) => {
+app.delete('/api/persons/:id', (req, res, next) => {
   Person.findByIdAndRemove(req.params.id)
     .then(result => {
       res.status(204).end()
     })
-    .catch(error => console.log(error))
+    .catch(error => next(error))
 })
 
 app.post('/api/persons', (req, res) => {
@@ -88,4 +98,18 @@ app.post('/api/persons', (req, res) => {
       res.json(savedPerson.toJSON())
     })
   }
+})
+
+app.put('/api/persons/:id', (req, res, next) => {
+  const body = req.body
+  const person = {
+    name: body.name,
+    number: body.number
+  }
+
+  Person.findByIdAndUpdate(req.params.id, person, { new: true })
+    .then(updatedPerson => {
+      res.json(updatedPerson.toJSON())
+    })
+    .catch(error => next(error))
 })
